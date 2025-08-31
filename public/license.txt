@@ -1,0 +1,11 @@
+Model Information:
+* title:	1993 Continental Airlines Boeing 737-200
+* source:	https://sketchfab.com/3d-models/1993-continental-airlines-boeing-737-200-ac7bf39dc1284f069cf85542fc72f69d
+* author:	OUTPISTON (https://sketchfab.com/outpiston)
+
+Model License:
+* license type:	CC-BY-NC-SA-4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
+* requirements:	Author must be credited. No commercial use. Modified versions must have the same license.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "1993 Continental Airlines Boeing 737-200" (https://sketchfab.com/3d-models/1993-continental-airlines-boeing-737-200-ac7bf39dc1284f069cf85542fc72f69d) by OUTPISTON (https://sketchfab.com/outpiston) licensed under CC-BY-NC-SA-4.0 (http://creativecommons.org/licenses/by-nc-sa/4.0/)
