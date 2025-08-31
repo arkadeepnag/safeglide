@@ -1,6 +1,6 @@
 import React, { useRef, useState, Suspense, useEffect } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useGLTF } from "@react-three/drei";
+import { useGLTF, OrbitControls } from "@react-three/drei"; // Import OrbitControls
 import {
   Box,
   Switch,
@@ -53,27 +53,35 @@ function Runway({ length = 2000, width = 60 }) {
   );
 }
 
-/* AirbagCushion: A single, large cushion under the plane's belly.
-  It inflates vertically when deployed.
-*/
+/* AirbagCushion: A large, rounded, translucent orange cushion that inflates under the plane. */
 function AirbagCushion({ deployed = false }) {
   const bagRef = useRef();
   useFrame((_, delta) => {
     if (!bagRef.current) return;
-    const targetScale = deployed ? 1 : 0.001;
+    const targetScale = deployed ? 1.0 : 0.001; // Inflate scale
+    const targetYOffset = deployed ? 0 : -2; // Slightly lift off the ground when deployed
+
+    // Smoothly scale the airbag
     bagRef.current.scale.y = lerp(bagRef.current.scale.y, targetScale, 0.08);
-    bagRef.current.material.opacity = clamp(bagRef.current.scale.y * 0.9, 0.1, 1.0);
+    bagRef.current.scale.x = lerp(bagRef.current.scale.x, targetScale, 0.08);
+    bagRef.current.scale.z = lerp(bagRef.current.scale.z, targetScale, 0.08);
+
+    // Adjust opacity based on inflation
+    bagRef.current.material.opacity = clamp(bagRef.current.scale.y * 0.7, 0.0, 0.8);
+
+    // Adjust position for inflation
+    bagRef.current.position.y = lerp(bagRef.current.position.y, targetYOffset, 0.08);
   });
 
   return (
     <group>
-      <mesh ref={bagRef} position={[0, -1, 0]}>
-        {/* Sized to fit the belly of a 737-like aircraft: width, height, length */}
-        <boxGeometry args={[10, 4, 35]} />
+      {/* CapsuleGeometry for a more realistic elongated airbag shape */}
+      <mesh ref={bagRef} position={[0, -2, 0]} rotation={[0, 0, Math.PI / 2]}> {/* Rotate to lie flat */}
+        <capsuleGeometry args={[8, 30, 8, 16]} /> {/* Radius, Length, Radial Segments, Cap Segments */}
         <meshStandardMaterial
           color="#ff8c00" /* Orange color */
           transparent
-          opacity={0.1}
+          opacity={0.0} // Starts invisible
           metalness={0.1}
           roughness={0.7}
         />
@@ -82,33 +90,18 @@ function AirbagCushion({ deployed = false }) {
   );
 }
 
-/* CameraRig: A fixed, zoomed-out chase camera for a cinematic view.
-  User cannot control this camera.
-*/
-function CameraRig({ targetRef }) {
+/* CameraRig: Now simply clamps the camera's position to prevent going underground. */
+function CameraRig() {
   const { camera } = useThree();
-  const cameraOffset = new THREE.Vector3(0, 25, 60); // Zoomed out: Y=height, Z=distance behind
-
   useFrame(() => {
-    if (!targetRef.current) return;
-    const worldPos = targetRef.current.getWorldPosition(new THREE.Vector3());
-    const worldQuat = targetRef.current.getWorldQuaternion(new THREE.Quaternion());
-
-    const desiredPos = worldPos.clone().add(cameraOffset.clone().applyQuaternion(worldQuat));
-
-    camera.position.lerp(desiredPos, 0.05);
-    camera.lookAt(worldPos.x, worldPos.y, worldPos.z);
+    // Prevent camera from going below the ground (Y = 0)
+    if (camera.position.y < 0.5) {
+      camera.position.y = 0.5;
+    }
   });
-
   return null;
 }
 
-/* Plane component: Enhanced with animated control surfaces, new weather effects,
-  and corrected physics.
-*/
-/* Plane component: Enhanced with animated control surfaces, new weather effects,
-  and corrected physics.
-*/
 /* Plane component: Final corrected version with stable AI and physics. */
 function Plane({ state, planeRef }) {
   const gltf = usePlaneModel(state.model);
@@ -146,10 +139,12 @@ function Plane({ state, planeRef }) {
       }
     });
     Object.values(animatedParts.current).forEach(part => {
-      part.material = part.material.clone();
+        if (part.material) {
+            part.material = part.material.clone();
+        }
     })
   }, [gltf.scene]);
-
+  
   // Reset simulation state
   useEffect(() => {
     if (state.resetFlag) {
@@ -161,7 +156,7 @@ function Plane({ state, planeRef }) {
       state.setResetFlag(false);
     }
   }, [state.resetFlag, phys, state]);
-
+  
   // Handle bird strike event
   useEffect(() => {
     if (state.birdStrike) {
@@ -180,8 +175,8 @@ function Plane({ state, planeRef }) {
     const authority = clamp(1 - phys.damage * 0.7, 0.15, 1);
     const icingEffect = state.icing ? { drag: 1.5, lift: 0.85 } : { drag: 1.0, lift: 1.0 };
     if (state.turbulence) {
-      phys.roll += (Math.random() - 0.5) * 0.004;
-      phys.pitch += (Math.random() - 0.5) * 0.002;
+        phys.roll += (Math.random() - 0.5) * 0.004;
+        phys.pitch += (Math.random() - 0.5) * 0.002;
     }
 
     const flightPathAngle = Math.atan2(vy, Math.max(1e-3, Math.abs(vx)));
@@ -205,9 +200,7 @@ function Plane({ state, planeRef }) {
     const windZ = Math.sin(windDirRad) * windSpeedMS;
     vz += (windZ * 0.08) * (1 - phys.damage * 0.5) * delta;
 
-    // --- AI Pitch Control (Glide Path) ---
-    // **FIXED**: This logic now ONLY runs when airborne and approaching the runway.
-    if (state.aiEnabled && !phys.onGround && phys.pos[0] > 50) {
+    if (state.aiEnabled && !phys.onGround && phys.pos[0] > -200) {
       const distanceToThresh = phys.pos[0];
       const desiredAltitude = clamp(distanceToThresh / 19 + state.approachAltitude, 0, 400);
       const altErr = phys.pos[1] - desiredAltitude;
@@ -216,10 +209,11 @@ function Plane({ state, planeRef }) {
       if (ks > state.targetSpeed + 8) pitchCmd += 0.01 * authority;
       phys.pitch = lerp(phys.pitch, pitchCmd, 0.06 * authority);
       glowFactors.elevator = lerp(glowFactors.elevator, Math.abs(pitchCmd - phys.pitch) > 0.001 ? 1 : 0, 0.1);
+    } else if (phys.onGround) {
+        phys.pitch = lerp(phys.pitch, 0, 0.05); 
     }
     glowFactors.aileron = lerp(glowFactors.aileron, state.aiEnabled ? 1 : 0, 0.1);
 
-    // --- Flare before touchdown ---
     if (!phys.onGround && phys.pos[1] < FLARE_ALT && phys.pos[0] > -200 && phys.pos[0] < 50) {
       const flareFactor = clamp((FLARE_ALT - phys.pos[1]) / FLARE_ALT, 0, 1);
       const flarePitch = 0.09 * flareFactor * authority;
@@ -227,9 +221,8 @@ function Plane({ state, planeRef }) {
     }
 
     vy += ((lift / MASS) + GRAVITY) * delta;
-    // We apply thrust against drag. Since vx is negative, drag is positive. Thrust needs to be subtracted.
     vx += ((-thrust + drag) / MASS) * delta;
-
+    
     phys.pos[0] += vx * Math.cos(phys.yaw) * delta;
     phys.pos[1] += vy * delta;
     phys.pos[2] += (vx * Math.sin(phys.yaw) + vz) * delta;
@@ -240,15 +233,14 @@ function Plane({ state, planeRef }) {
       state.setCushionDeployed(true);
       state.pushAiLog("AI: Unrecoverable state. Deploying emergency cushions.");
     }
-
-    // --- Touchdown & Ground Physics ---
-    if (phys.pos[1] <= 0.5 && !phys.onGround) {
+    
+    if (phys.pos[1] <= 0.5 && !phys.onGround) { 
       phys.onGround = true;
       phys.pos[1] = 0.5;
-      const touchdownKts = Math.abs(vx * 1.944); // Use absolute speed
+      const touchdownKts = Math.abs(vx * 1.944);
       if (state.gearFailure) {
         vx *= phys.deployedCushion ? 0.55 : 0.25;
-        phys.damage = clamp(phys.damage + 0.4 + (touchdownKts > 80 ? 0.3 : 0), 0, 1.2);
+        phys.damage = clamp(phys.damage + 0.4 + (touchdownKts > 80 ? 0.3: 0), 0, 1.2);
         state.pushAiLog(`GEARLESS LANDING at ${Math.round(touchdownKts)} kts.`);
       } else {
         phys.damage = clamp(phys.damage + (touchdownKts > 100 ? 0.2 : 0.02), 0, 1.0);
@@ -256,14 +248,16 @@ function Plane({ state, planeRef }) {
       }
     }
     if (phys.onGround) {
-      vy = 0;
-      phys.pitch = lerp(phys.pitch, 0, 0.1); // Level out on ground
-      phys.roll = lerp(phys.roll, 0, 0.1);
-      const friction = state.gearFailure ? (phys.deployedCushion ? 0.2 : 0.4) : 0.04;
-      vx *= 1 - (friction + state.brakeForce) * delta * 5;
-      vz *= 0.92;
-      // **FIXED**: Correctly stops the plane when speed is low
-      if (Math.abs(vx) < 0.5) vx = 0;
+        vy = 0;
+        phys.roll = lerp(phys.roll, 0, 0.1);
+        const friction = state.gearFailure ? (phys.deployedCushion ? 0.2 : 0.4) : 0.04;
+        vx *= 1 - (friction + state.brakeForce) * delta * 5;
+        vz *= 0.92;
+        if (Math.abs(vx) < 0.5) {
+            vx = 0;
+            vz = 0;
+            phys.yaw = lerp(phys.yaw, 0, 0.1);
+        }
     }
     phys.vel = [vx, vy, vz];
 
@@ -280,38 +274,39 @@ function Plane({ state, planeRef }) {
     if (animatedParts.current.elevator) animatedParts.current.elevator.material.emissive.copy(glowColor).multiplyScalar(glowFactors.elevator);
     if (animatedParts.current.rudder) animatedParts.current.rudder.material.emissive.copy(glowColor).multiplyScalar(glowFactors.rudder);
 
-    state.setTelemetry(t => ({ ...t, altitude: Math.round(phys.pos[1]), speed: Math.round(Math.abs(vx * 1.944)), verticalSpeed: Math.round(vy * 197), stall, cushion: phys.deployedCushion, onGround: phys.onGround, damage: Math.round(phys.damage * 100) }));
+    state.setTelemetry(t => ({...t, altitude: Math.round(phys.pos[1]), speed: Math.round(Math.abs(vx * 1.944)), verticalSpeed: Math.round(vy * 197), stall, cushion: phys.deployedCushion, onGround: phys.onGround, damage: Math.round(phys.damage * 100)}));
   });
 
   return (
     <group ref={planeRef} dispose={null}>
-      {/* **FIXED**: This rotation orients the plane to fly forward correctly */}
-      <group rotation={[0, Math.PI, 0]}>
-        <primitive object={gltf.scene} />
-      </group>
-      <group position={[0, -1.5, 0]}>
-        <AirbagCushion deployed={state.cushionDeployed} />
-      </group>
+        {/* **FIXED**: Corrected rotation for the GLTF model to be right-side up and facing -X (towards runway) */}
+        <group rotation={[0, Math.PI / 2, Math.PI]}> {/* Rotate 180 deg around Z to flip, then 90 deg around Y to face -X */}
+            <primitive object={gltf.scene} />
+        </group>
+        {/* Airbag is now centered at the plane's origin */}
+        <group position={[0, 0, 0]}>
+            <AirbagCushion deployed={state.cushionDeployed} />
+        </group>
     </group>
   );
 }
 
 /* HUD (unchanged) */
 function HUD({ telemetry }) {
-  return (
-    <div style={{ position: 'absolute', left: '50%', top: '5%', transform: 'translateX(-50%)', zIndex: 100, pointerEvents: 'none', color: 'white', minWidth: 400, textAlign: 'center', fontFamily: 'monospace' }}>
-      <div style={{ backdropFilter: 'blur(4px)', background: 'rgba(0,0,0,0.3)', padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
-          <div><Typography variant="caption" sx={{ color: '#aee3ff' }}>SPEED</Typography><div style={{ fontSize: 20 }}>{telemetry.speed} kts</div></div>
-          <div><Typography variant="caption" sx={{ color: '#aee3ff' }}>ALT</Typography><div style={{ fontSize: 20 }}>{telemetry.altitude} m</div></div>
-          <div><Typography variant="caption" sx={{ color: '#aee3ff' }}>V/S</Typography><div style={{ fontSize: 20 }}>{telemetry.verticalSpeed} ft/m</div></div>
-          <div><Typography variant="caption" sx={{ color: '#aee3ff' }}>DMG</Typography><div style={{ fontSize: 20, color: telemetry.damage > 50 ? '#ff6b6b' : 'white' }}>{telemetry.damage}%</div></div>
-          <div><Typography variant="caption" sx={{ color: '#aee3ff' }}>STALL</Typography><div style={{ fontSize: 20, color: telemetry.stall ? '#ff6b6b' : '#9ef08a' }}>{telemetry.stall ? 'WARN' : 'NO'}</div></div>
+    return (
+      <div style={{ position: 'absolute', left: '50%', top: '5%', transform: 'translateX(-50%)', zIndex: 100, pointerEvents: 'none', color: 'white', minWidth: 400, textAlign: 'center', fontFamily: 'monospace' }}>
+        <div style={{ backdropFilter: 'blur(4px)', background: 'rgba(0,0,0,0.3)', padding: '8px 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.2)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+            <div><Typography variant="caption" sx={{ color: '#aee3ff' }}>SPEED</Typography><div style={{ fontSize: 20 }}>{telemetry.speed} kts</div></div>
+            <div><Typography variant="caption" sx={{ color: '#aee3ff' }}>ALT</Typography><div style={{ fontSize: 20 }}>{telemetry.altitude} m</div></div>
+            <div><Typography variant="caption" sx={{ color: '#aee3ff' }}>V/S</Typography><div style={{ fontSize: 20 }}>{telemetry.verticalSpeed} ft/m</div></div>
+            <div><Typography variant="caption" sx={{ color: '#aee3ff' }}>DMG</Typography><div style={{ fontSize: 20, color: telemetry.damage > 50 ? '#ff6b6b' : 'white' }}>{telemetry.damage}%</div></div>
+            <div><Typography variant="caption" sx={{ color: '#aee3ff' }}>STALL</Typography><div style={{ fontSize: 20, color: telemetry.stall ? '#ff6b6b' : '#9ef08a' }}>{telemetry.stall ? 'WARN' : 'NO'}</div></div>
+          </div>
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
 /* Main App */
 export default function App() {
@@ -330,7 +325,7 @@ export default function App() {
   const [aiLog, setAiLog] = useState([]);
   const [resetFlag, setResetFlag] = useState(false);
   const [brakeForce, setBrakeForce] = useState(0.12);
-
+  
   const planeRef = useRef();
 
   function pushAiLog(msg) {
@@ -356,7 +351,7 @@ export default function App() {
     <div style={{ display: 'flex', height: '100vh', width: '100vw', background: '#07070a' }}>
       <div style={{ flex: 1, position: 'relative' }}>
         <HUD telemetry={telemetry} />
-        <Canvas camera={{ position: [0, 12, 100], fov: 45 }}>
+        <Canvas camera={{ position: [-150, 80, 0], fov: 45 }}> {/* Adjusted initial camera position for better overview */}
           <fog attach="fog" args={['#1c2436', 1000, 6000]} />
           <ambientLight intensity={0.8} />
           <directionalLight position={[30, 60, 40]} intensity={2.5} castShadow />
@@ -367,7 +362,8 @@ export default function App() {
               <planeGeometry args={[8000, 8000]} />
               <meshStandardMaterial color="#0c1a1e" />
             </mesh>
-            <CameraRig targetRef={planeRef} />
+            <CameraRig /> {/* CameraRig for clamping, OrbitControls handles movement */}
+            <OrbitControls minPolarAngle={0} maxPolarAngle={Math.PI / 2.05} /> {/* Re-enabled OrbitControls with min/max polar angle to prevent going below ground */}
           </Suspense>
         </Canvas>
       </div>
@@ -376,20 +372,20 @@ export default function App() {
         <Typography variant="h6">Safe Glide Control</Typography>
         <Stack spacing={1} sx={{ mt: 1 }}>
           <FormControlLabel control={<Switch color="info" checked={aiEnabled} onChange={(e) => setAiEnabled(e.target.checked)} />} label="AI Autopilot" />
-          <Typography variant="subtitle2" sx={{ pt: 1 }}>Failure Scenarios</Typography>
+          <Typography variant="subtitle2" sx={{pt: 1}}>Failure Scenarios</Typography>
           <FormControlLabel control={<Switch color="warning" checked={gearFailure} onChange={(e) => setGearFailure(e.target.checked)} />} label="Gear Failure" />
           <FormControlLabel control={<Switch color="warning" checked={throttleFailure} onChange={(e) => setThrottleFailure(e.target.checked)} />} label="Throttle Failure" />
-          <Button sx={{ justifyContent: 'flex-start' }} size="small" variant="text" color="warning" onClick={() => setBirdStrike(true)}>Trigger Bird Strike</Button>
-
-          <Typography variant="subtitle2" sx={{ pt: 1 }}>Weather Conditions</Typography>
+          <Button sx={{justifyContent: 'flex-start'}} size="small" variant="text" color="warning" onClick={() => setBirdStrike(true)}>Trigger Bird Strike</Button>
+          
+          <Typography variant="subtitle2" sx={{pt: 1}}>Weather Conditions</Typography>
           <FormControlLabel control={<Switch color="secondary" checked={turbulence} onChange={(e) => setTurbulence(e.target.checked)} />} label="Turbulence" />
           <FormControlLabel control={<Switch color="secondary" checked={icing} onChange={(e) => setIcing(e.target.checked)} />} label="Icing Conditions" />
           <Typography>Wind Speed: {windSpeed} knots</Typography>
           <Slider value={windSpeed} min={0} max={50} onChange={(_, v) => setWindSpeed(v)} />
           <Typography>Wind Direction: {windDir}°</Typography>
           <Slider value={windDir} min={0} max={360} onChange={(_, v) => setWindDir(v)} />
-
-          <Typography variant="subtitle2" sx={{ pt: 1 }}>Aircraft Controls</Typography>
+          
+          <Typography variant="subtitle2" sx={{pt: 1}}>Aircraft Controls</Typography>
           <Typography>Throttle: {throttle}%</Typography>
           <Slider value={throttle} min={0} max={100} onChange={(_, v) => setThrottle(v)} />
           <Typography>Approach Altitude Offset: {approachAltitude} m</Typography>
@@ -397,17 +393,17 @@ export default function App() {
           <Typography>Brake Force (On Ground)</Typography>
           <Slider value={brakeForce} min={0.02} max={0.4} step={0.01} onChange={(_, v) => setBrakeForce(v)} />
 
-          <Stack direction="row" spacing={1} sx={{ pt: 2 }}>
+          <Stack direction="row" spacing={1} sx={{pt: 2}}>
             <Button variant="contained" onClick={() => resetSim()}>Reset Sim</Button>
             <Button variant="outlined" color="error" onClick={() => { setCushionDeployed(true); pushAiLog("Manual cushion deploy."); }}>Deploy Airbags</Button>
           </Stack>
 
-          <Box sx={{ mt: 2, p: 1, background: 'rgba(0,0,0,0.2)', borderRadius: 1 }}>
-            <Typography variant="subtitle2">AI & System Log</Typography>
-            <Box sx={{ mt: 1, height: 180, overflowY: "auto", fontFamily: 'monospace', fontSize: 12 }}>
-              {aiLog.map((l, i) => (<Typography key={i} sx={{ fontSize: 12 }}>{l}</Typography>))}
-            </Box>
-          </Box>
+          <Box sx={{ mt: 2, p: 1, background: 'rgba(0,0,0,0.2)', borderRadius: 1}}>
+             <Typography variant="subtitle2">AI & System Log</Typography>
+             <Box sx={{ mt: 1, height: 180, overflowY: "auto", fontFamily: 'monospace', fontSize: 12 }}>
+               {aiLog.map((l, i) => (<Typography key={i} sx={{ fontSize: 12 }}>{l}</Typography>))}
+             </Box>
+           </Box>
         </Stack>
       </Box>
     </div>
