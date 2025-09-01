@@ -68,7 +68,9 @@ flowchart TD
 
 ## Demo Snapshots
 
-*(Insert screenshots or 3D renders from your simulation here)*
+![SafeGlide Demo Screenshot](./public/showcase.png)
+
+*Above: 3D render from SafeGlide simulation showcasing adaptive airbag deployment during emergency landing.*
 
 ---
 
@@ -76,10 +78,10 @@ flowchart TD
 
 Developed at the **International Innovation Hackathon 2.0** by:
 
-* Arkadeep Nag([@arkadeepnag])(https://github.com/arkadeepnag)
-* Vansh Malik([@thevanshmalik])(https://github.com/thevanshmalik)
-* Srushti Dungrani([@srushtidungrani06])(https://github.com/srushtidungrani06)
-* Aryan Pathak([@aryanpathak376])(https://github.com/aryanpathak376)
+* Arkadeep Nag - [@arkadeepnag](https://github.com/arkadeepnag)
+* Vansh Malik - [@thevanshmalik](https://github.com/thevanshmalik)
+* Srushti Dungrani - [@srushtidungrani06](https://github.com/srushtidungrani06)
+* Aryan Pathak - [@aryanpathak376](https://github.com/aryanpathak376)
 
 ---
 
