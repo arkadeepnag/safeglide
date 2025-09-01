@@ -62,20 +62,11 @@ function LoadingScreen({ progress, active }) {
         fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
       }}
     >
-      <svg width="120" height="120" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.8 }}>
-        <path d="M12 2L2 9.07V15.5L12 22L22 15.5V9.07L12 2Z" stroke="#e9eef8" strokeWidth="1.5" strokeLinejoin="round" />
-        <path d="M2.5 9.5L12 15L21.5 9.5" stroke="#e9eef8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M12 22V15" stroke="#e9eef8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M17.5 7L12 9.5L6.5 7" stroke="#e9eef8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+      <img src="/logo.png" alt="Safe Glide Logo" width={120} height={120} style={{ opacity: 0.8 }} />
 
-      <h1 style={{ marginTop: 24, letterSpacing: '0.2em', textTransform: 'uppercase', fontWeight: 600, fontSize: 24 }}>
-        Safe Glide
-      </h1>
       <p style={{ marginTop: -10, color: '#a9b6d7', fontSize: 14 }}>
         SYSTEMS INITIALIZING
       </p>
-
       <div style={{ width: '240px', height: '2px', background: 'rgba(255, 255, 255, 0.15)', borderRadius: '1px', marginTop: 32, overflow: 'hidden' }}>
         <div
           style={{
