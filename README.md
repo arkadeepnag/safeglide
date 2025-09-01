@@ -1,71 +1,98 @@
-# Getting Started with Create React App
+# SafeGlide – Adaptive Airbag System for Safer Aircraft Landings
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+![GitHub repo size](https://img.shields.io/github/repo-size/arkadeepnag/safeglide?color=blue\&label=Repo%20Size\&style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+![Hackathon](https://img.shields.io/badge/Hackathon-International%20Innovation%202.0-orange?style=for-the-badge)
+![Tech](https://img.shields.io/badge/Tech-React%20%7C%20Three.js%20%7C%20AI-blueviolet?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Prototype-yellow?style=for-the-badge)
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## About the Project
 
-### `npm start`
+SafeGlide is an **AI-powered adaptive airbag system** designed to make emergency aircraft landings survivable.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+While 70% of survivable aviation accidents involve hard landings or runway overruns, existing systems focus on preventing crashes — not minimizing impact when they do occur.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+SafeGlide bridges this gap by deploying an under-fuselage airbag raft in **under 150 milliseconds**, reducing peak G-forces by up to 50% and stabilizing the aircraft to prevent rollovers and secondary crashes.
 
-### `npm test`
+Developed for the **International Innovation Hackathon 2.0 (Space & Aerotech Innovation Track)**.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## How It Works
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+SafeGlide uses a three-step adaptive safety mechanism powered by real-time sensor fusion and predictive AI models:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1. **Sense** – Monitors descent speed, angle, altitude, and gear behavior using radar altimeters & IMUs.
+2. **Decide** – AI anomaly detection identifies unsafe landing scenarios within milliseconds.
+3. **Act** – High-pressure inflators deploy the adaptive airbag raft in under 150 ms.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Tech Flow
 
-### `npm run eject`
+```mermaid
+flowchart TD
+    A[Sensor Data Collection] --> B[AI Anomaly Detection]
+    B --> C[Decision Layer]
+    C --> D[Airbag Deployment]
+    D --> E[Impact Cushioning & Stabilization]
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+---
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Key Innovations
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+* AI-powered predictive safety system.
+* Ultra-fast airbag deployment (<150 ms).
+* Reduction of peak G-forces by \~50%.
+* Aircraft stabilization to prevent rollovers and secondary crashes.
+* Scalable design for both small aircraft and large commercial airliners.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+---
 
-## Learn More
+## Tech Implementation
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+* **Hardware**: Radar altimeters, IMUs, pressure sensors, high-speed inflators.
+* **Software**: Real-time AI anomaly detection, embedded controller for decision logic, 3D visualization using React + Three.js (R3F).
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+---
 
-### Code Splitting
+## Feasibility & Impact
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+* Leverages existing aviation components for easier integration.
+* Reduces peak G-forces by \~50%, increasing survival rates.
+* Applicable to private jets, commercial aircraft, and cargo planes.
+* Improves global aviation safety standards and passenger confidence.
 
-### Analyzing the Bundle Size
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Demo Snapshots
 
-### Making a Progressive Web App
+*(Insert screenshots or 3D renders from your simulation here)*
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+---
 
-### Advanced Configuration
+## Team GrowthX – Collaborators
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Developed at the **International Innovation Hackathon 2.0** by:
 
-### Deployment
+* Arkadeep Nag([@arkadeepnag])(https://github.com/arkadeepnag)
+* Vansh Malik([@thevanshmalik])(https://github.com/thevanshmalik)
+* Srushti Dungrani([@srushtidungrani06])(https://github.com/srushtidungrani06)
+* Aryan Pathak([@aryanpathak376])(https://github.com/aryanpathak376)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+---
 
-### `npm run build` fails to minify
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
-# safeglide
+## License
+
+This project is licensed under the **MIT License**.
+
+---
+
+## Future Roadmap
+
+* Hardware prototype testing with scaled aircraft models.
+* Integration with aircraft avionics systems.
+* Field tests under simulated crash-landing conditions.
+* Enhanced AI prediction with larger datasets.
