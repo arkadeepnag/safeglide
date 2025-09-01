@@ -62,7 +62,7 @@ function LoadingScreen({ progress, active }) {
         fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
       }}
     >
-      <img src="/logo.png" alt="Safe Glide Logo" width={120} height={120} style={{ opacity: 0.8 }} />
+      <img src="/logo.png" alt="Safe Glide Logo" height={120} style={{ opacity: 0.8 }} />
 
       <p style={{ marginTop: -10, color: '#a9b6d7', fontSize: 14 }}>
         SYSTEMS INITIALIZING
